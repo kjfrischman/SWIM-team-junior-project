@@ -1,3 +1,26 @@
+# Created by https://www.gitignore.io/api/vim
+# # Edit at https://www.gitignore.io/?templates=vim
+
+### Vim ###
+# Swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# # Session
+Session.vim
+
+# # Temporary
+.netrwhist
+*~
+# # Auto-generated tag files
+tags
+Persistent undo
+
+# End of https://www.gitigore.io/api/vim
+
 # Prerequisites
 *.d
 
@@ -50,3 +73,37 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+# Created by https://www.gitignore.io/api/mplabx
+# Edit at https://www.gitignore.io/?templates=mplabx
+
+### MPLabX ###
+#Ignore List for Microchips MPLabX IDE
+#Form of netbeans with vendor specific changes
+#Taken from zeha on GIST https://gist.github.com/zeha/5999375
+
+*.d
+*.pre
+*.p1
+*.lst
+*.sym
+*.obj
+*.o
+*.sdb
+*.obj.dmp
+html/
+nbproject/private/
+nbproject/Package-*.bash
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+funclist
+nbproject/Makefile-*
+disassembly/
+*.map
+
+# End of https://www.gitignore.io/api/mplabx
