@@ -62,3 +62,17 @@ void testAll()
     radio.rcCalibration(); // calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy]
 
 }
+
+
+void RF_Init()
+{
+    uint8_t slaveSelectPin = 0, interruptPin = 0;
+    bool isRFM69HW = 1;
+    uint8_t freqBand = 91, ID = 5, networkID = 5;
+    
+    
+    
+    RFM69 radio(slaveSelectPin, interruptPin, isRFM69HW);
+    radio.initialize(freqBand, ID, networkID);
+    radio.canSend();
+}

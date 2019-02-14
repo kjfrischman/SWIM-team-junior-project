@@ -7,8 +7,8 @@
 #include "RTC2.h"
 
 
-#include "GFX/tft_master.h"
-#include "GFX/tft_gfx.h"
+#include "../GFX/tft_master.h"
+#include "../GFX/tft_gfx.h"
 
 
 #define LCD_Color ILI9340_GREY

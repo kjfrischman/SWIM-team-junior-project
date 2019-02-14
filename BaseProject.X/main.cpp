@@ -1,4 +1,4 @@
-/* Author: 			Peter Stine, <others>
+/* Author: 			Peter Stine, Kyle Frischman, <others>
  * Date Created:		12/17/18
  * Last Modification Date:	12/17/18
  * Filename:			main.cpp
@@ -22,8 +22,9 @@
 
 
 #include <xc.h>
-#include "RFM69registers.h"
-#include ""
+#include <sys/attribs.h>
+
+
 
 #pragma config FPLLIDIV = DIV_2         // System PLL Input Divider (2x Divider) 12MHz/2 = 6MHz
 #pragma config FPLLRNG = RANGE_5_10_MHZ // System PLL Input Range (5-10 MHz Input)
@@ -44,57 +45,54 @@
 #pragma config JTAGEN = OFF             // JTAG Enable (JTAG Disabled)
 #pragma config ICESEL = ICS_PGx2        // ICE/ICD Comm Channel Select (Communicate on PGEC2/PGED2)
 
-void tft_init_hw(void) {
 
-    
-    //Setup SPI2 For Transmission
-    //SPI Configuration
-    //SPI Clock 2MHz 
-    SPI4BRG = 1;
-    //Turn off AN3 in ANSELB<3>
-    ANSELBCLR = 0x8;
-    //Clear MSSEN Bit in SPI4CON<28>, CKE = 0, SMP = 0
-    SPI4CONCLR = 0x10000300;
-    // CKP = 1
-    SPI4CONSET = 0x8060;
-    //PPS Configuration
-    //SDI4 = RPB3
-    SDI4R = 0x1000;
-    //SD04 = RPF2 --> set the output pin
-    RPD5R = 0x1000; // RD10 = Serial Clock SDO4
-    //Set LATF<8>
-    LATFSET = 0x100;
-    //Clear TRISF<8>
-    TRISFCLR = 0x100;
-    TRISDCLR = 0x20;
-  
-}
+#include "RTC-RFM-GFX/GFX/LCD_Interface.h"
+#include "RTC-RFM-GFX/RFM69/RF_Master.h"
+#include "RTC-RFM-GFX/RTC/RTC2.h"
 
-void tft_spiwrite(uint32_t c){ // Transfer to SPI
-    SPI4BUF = c;
-   // while (SPI4STATbits.SPIBUSY); // wait for it to end of transaction
-}
-
-
-void tft_spiwrite16(unsigned short c){  // Transfer two bytes "c" to SPI
-    while (SPI4STATbits.TXBUFELM);
-    SPI4BUF = (c);
-    while (SPI4STATbits.SPIBUSY); // wait for it to end of transaction
-}
-
-int main()
+int main(void)
 {
-	// Setup SPI
-    tft_init_hw();
+    ///////////////////////////
+    //Configure Syskey Params//
+    ///////////////////////////
+    //PB2DIV = 84MHz (No Division)
+    //System PB2DIV Setup
+    SYSKEY = 0; // Ensure lock
+    SYSKEY = 0xAA996655; // Write Key 1
+    SYSKEY = 0x556699AA; // Write Key 2
+    PB2DIV = _PB2DIV_ON_MASK | 0 & _PB2DIV_PBDIV_MASK; // 0 = div by 
+    RTCCONbits.RTCWREN = 1;
+    SYSKEY = 0; // Re lock
     
-    /// Send data payload
+    //Wait states = 1
+    //Flash Prefetch On
+    PRECON = (1 & _PRECON_PFMWS_MASK) | 
+            ((2 << _PRECON_PREFEN_POSITION) & _PRECON_PREFEN_MASK);
+    
+     //Enable Multi-Vector Mode
+    INTCONSET = _INTCON_MVEC_MASK;
+    
+	///////////////////////////
+    //Initialize All Hardware//
+    ///////////////////////////
+    
+    //Initialize Real Time Clock
+    clock_init();
+    RTC_Config();
+    
+    
+    //Initialize LCD
+    LCD_Init();
+    
+    
+    //Initialize Radio
+    RF_Init();
+    
     while(1)
     {
-        tft_spiwrite(0b110010100000000); // [1=write][address=0x25][data=0xff]
+        //System Running Loop
+        //Use for polling tasks if needed
     }
-    
-    // Trigger interrupt for when data is receivedNp 
-    
     
 	return 0;
 }

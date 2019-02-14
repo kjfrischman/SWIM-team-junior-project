@@ -9,6 +9,7 @@
 #define	RF_MASTER_H
 
 void testAll();
+void RF_Init();
 
 #endif	/* RF_MASTER_H */
 
