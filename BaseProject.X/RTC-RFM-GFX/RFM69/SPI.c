@@ -11,7 +11,10 @@ int millis()
 
 int SPI_Transfer(int data)
 {
+    int toReturn = 1;
     SPI1BUF = data;
+    toReturn = SPI1BUF;
     while(SPI1STATbits.SPIBUSY);
-    return SPI1BUF;
+    toReturn = SPI1BUF;
+    return toReturn;
 }

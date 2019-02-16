@@ -108,9 +108,11 @@ class RFM69 {
     void writeReg(uint8_t addr, uint8_t val);
     void readAllRegs();
 
+    void interruptHandler();
+    
   protected:
     static void isr0();
-    void interruptHandler();
+    
     virtual void interruptHook(uint8_t CTLbyte) {};
     static volatile bool _haveData;
     virtual void sendFrame(uint8_t toAddress, const void* buffer, uint8_t size, bool requestACK=false, bool sendACK=false);
@@ -125,9 +127,6 @@ class RFM69 {
 #if defined (SPCR) && defined (SPSR)
     uint8_t _SPCR;
     uint8_t _SPSR;
-#endif
-#ifdef SPI_HAS_TRANSACTION
-  SPISettings _settings;
 #endif
 
     virtual void receiveBegin();

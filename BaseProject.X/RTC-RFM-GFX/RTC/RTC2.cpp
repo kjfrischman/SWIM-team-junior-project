@@ -5,6 +5,7 @@
 #include <xc.h>
 #include <sys/attribs.h>
 #include "RTC2.h"
+#include "../RFM69/RF_Master.h"
 
 
 #define LCD_Color ILI9340_GREY
@@ -235,7 +236,7 @@ void app_clock(void)
             clockfield_to_lcdstr(clock_second, 1, buffer);
             #endif
             //Blink LED
-            LED_LAT = !LED_LAT;
+            RF_SEND(2, buffer, 2);
             //Write Current Second Value
             TimeUpdate(LCD_SEC, 0, TIME_SPACE, Time_H);
     

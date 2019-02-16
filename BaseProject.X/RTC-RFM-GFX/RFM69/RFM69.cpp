@@ -305,8 +305,7 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 
 // internal function - interrupt gets called when a packet is received
 void RFM69::interruptHandler() {
-  //pinMode(4, OUTPUT);
-  //digitalWrite(4, 1);
+    
   if (_mode == RF69_MODE_RX && (readReg(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY))
   {
     //RSSI = readRSSI();
@@ -344,7 +343,6 @@ void RFM69::interruptHandler() {
     setMode(RF69_MODE_RX);
   }
   RSSI = readRSSI();
-  //digitalWrite(4, 0);
 }
 
 // internal function
@@ -445,12 +443,12 @@ void RFM69::writeReg(uint8_t addr, uint8_t value)
 
 // select the RFM69 transceiver (save SPI settings, set CS low)
 void RFM69::select() {
-    PORTGbits.RG1 = 1;
+    PORTGbits.RG1 = 0;
 }
 
 // unselect the RFM69 transceiver (set CS high, restore SPI settings)
 void RFM69::unselect() {
-  PORTGbits.RG1 = 0;
+  PORTGbits.RG1 = 1;
 }
 
 // true  = disable filtering to capture all frames on network

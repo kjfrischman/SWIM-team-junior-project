@@ -140,13 +140,8 @@ void RFM69_ATC::interruptHook(uint8_t CTLbyte) {
       DATALEN -= 1;   // and compensate data length accordingly
       // TomWS1: Now dither transmitLevel value (register update occurs later when transmitting);
       if (_targetRSSI != 0) {
-        // if (_isRFM69HW) {
-          // if (_ackRSSI < _targetRSSI && _transmitLevel < 51) _transmitLevel++;
-          // else if (_ackRSSI > _targetRSSI && _transmitLevel > 32) _transmitLevel--;
-        // } else {
         if (_ackRSSI < _targetRSSI && _transmitLevel < 31) { _transmitLevel++; /*Serial.println("\n ======= _transmitLevel ++   ======");*/ }
         else if (_ackRSSI > _targetRSSI && _transmitLevel > 0) { _transmitLevel--; /*Serial.println("\n ======= _transmitLevel --   ======");*/ }
-        //}
       }
     }
   }
