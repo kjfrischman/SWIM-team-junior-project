@@ -48,6 +48,7 @@
 
 #include "RTC-RFM-GFX/RFM69/RF_Master.h"
 #include "RTC-RFM-GFX/RTC/RTC2.h"
+#include "RTC-RFM-GFX/CPS/CPS.h"
 
 int main(void)
 {

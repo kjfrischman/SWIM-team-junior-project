@@ -36,7 +36,19 @@ button2:		.word 0
 button3:		.word 0
 button4:		.word 0
 
-//
+// End of:
 // Global Data variables used in conjunction with the app_clock file.
 
 
+// Global Data variables used in conjunction with the CPS.c file.
+// 
+// Global variables
+.global water_detected
+    
+// Variable declarations
+.data
+water_detected:		.word 0
+    
+    
+// End of: 
+// Global Data variables used in conjunction with the CPS.c file.
