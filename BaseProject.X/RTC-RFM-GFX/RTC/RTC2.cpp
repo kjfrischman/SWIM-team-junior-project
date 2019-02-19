@@ -10,7 +10,7 @@
 
 #define LCD_Color ILI9340_GREY
 #define LCD_TXT ILI9340_WHITE 
-#define LCD_PRESENT 0
+//#define LCD_PRESENT 1
 #define LCD_Width 240
 #define Time_H 12
 #define TIME_SPACE 12

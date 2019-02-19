@@ -5,6 +5,8 @@
 
 void lcd_time_init(void)
 {
+    // This is where makefile errors come from
+    
     char buffer[20];
     
     //MUST be called AFTER LCD_Init
