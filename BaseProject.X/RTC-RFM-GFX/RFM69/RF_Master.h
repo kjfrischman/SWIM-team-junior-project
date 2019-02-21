@@ -11,23 +11,28 @@
 //***********************************
 //**** IMPORTANT RADIO SETTINGS  ****
 //***********************************
-#define NETWORKID     100
-#define RECEIVER      2    //unique ID of the gateway/receiver
-#define SENDER        1
-#define NODEID        RECEIVER  //change to "SENDER" if this is the sender node
-#define FREQUENCY     RF69_915MHZ
-#define ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
-#define IS_RFM69HW_HCW //uncomment only for RFM69HW/HCW! Leave out if you have RFM69W/CW!
-#define ENABLE_ATC      //comment out this line to disable AUTO TRANSMISSION CONTROL
-#define ATC_RSSI -75
+#define NETWORKID           100  //Do Not Change
+#define CONTROL_PANEL_NODE  3    //unique ID of the gateway/receiver
+#define SENSOR_UNIT_NODE    2    //ID of the sending Unit
+#define NODEID              CONTROL_PANEL_NODE  //change to "SENDER" if this is the sender node
+#define FREQUENCY           RF69_915MHZ
+#define ENCRYPTKEY          "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
+#define IS_RFM69HW_HCW      //Hardware Revision
+#define ENABLE_ATC          //comment this line to disable AUTO TRANSMISSION CONTROL
+#define ATC_RSSI            -75  //Reciever Sensitivity (dB)
 
-#define LED_TRIS    TRISHbits.TRISH2    // macro for direction register bit of the LED pin
+#define LED_TRIS    TRISHbits.TRISH2 
 #define LED_LAT     LATHbits.LATH2
+
+extern "C"
+{
+    void RF_SEND(uint8_t node, char * message, uint8_t attempts);
+};
 
 void RF_Init();
 void RX_Handler(void);
-void RF_SEND(uint8_t node, char * message, uint8_t attempts);
 
+uint8_t * RX_Get_Raw(void);
 
 #endif	/* RF_MASTER_H */
 

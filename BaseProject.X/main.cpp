@@ -48,7 +48,7 @@
 
 #include "RTC-RFM-GFX/RFM69/RF_Master.h"
 #include "RTC-RFM-GFX/RTC/RTC2.h"
-
+//#include "RTC-RFM-GFX/GFX/LCD_Interface.h"
 int main(void)
 {
     ///////////////////////////
@@ -77,10 +77,17 @@ int main(void)
     
     //Initialize Real Time Clock
     clock_init();
+    
+ //   LCD_Init();
+    
     RTC_Config();
+    
+//    lcd_time_init();
     
     //Initialize Radio
     RF_Init();
+    
+    asm("ei");
     
     while(1)
     {

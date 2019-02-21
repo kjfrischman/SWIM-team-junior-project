@@ -8,7 +8,6 @@
       RFM69_ATC radio;
 #else
       RFM69 radio;
-      radio.initialize(FREQUENCY,NODEID,NETWORKID);
 #endif
 
 void RF_Init()
@@ -26,21 +25,15 @@ void RF_Init()
     LATGbits.LATG1 = 1;
     TRISGbits.TRISG1 = 0;
     
+    LED_TRIS = 0;
+    
     #ifdef ENABLE_ATC
       radio.initialize(FREQUENCY,NODEID,NETWORKID);
       radio.enableAutoPower(ATC_RSSI);
     #else
-      RFM69 radio;
       radio.initialize(FREQUENCY,NODEID,NETWORKID);
-    #endif
+    #endif  
     
-    radio.encrypt(ENCRYPTKEY);
-  
-    if (NODEID == 1) //target node Id, message as string or byte array, message length
-    {
-       radio.sendWithRetry(RECEIVER, "Hi", 2);
-    }    
-       
 }
 
 void RF_SEND(uint8_t node, char * message, uint8_t attempts)
@@ -50,19 +43,29 @@ void RF_SEND(uint8_t node, char * message, uint8_t attempts)
 
 void RX_Handler(void)
 {
+    //Handle Getting data and ACK
+    radio.receiveDone();
+    int data = radio.DATA[0];
+    int length = radio.DATALEN;
     //Data exists, now do something with it
-    if (radio.DATALEN==2 && radio.DATA[0]=='H' && radio.DATA[1]=='i')
+    if (radio.DATALEN > 0 && radio.DATA[0] == 'S')
     {
-        //Toggle LED to show good data
-        LED_LAT = 1;
+        //Toggle LED
+        LED_LAT = !LED_LAT;
     }
+    
+    if(radio.ACKRequested()) radio.sendACK();
+    
 }
 
-//Radio ISR
-void __ISR_AT_VECTOR(_CHANGE_NOTICE_G_VECTOR, IPL7SOFT) RXISR(void)
+uint8_t * RX_Get_Raw(void)
 {
-    //Calls Interrupt Handler, and sleeps radio once data recieved
-    LED_LAT = 0; //Turn off LED since data is coming in
-    radio.receiveDone();
-    RX_Handler();
+    //Return last data, whatever it was
+    return radio.DATA;
+}
+
+void __ISR_AT_VECTOR(_CHANGE_NOTICE_E_VECTOR, IPL7SRS) RX_IRQ() { 
+  radio.haveData(true);
+  IFS3bits.CNEIF = 0;
+  RX_Handler();
 }

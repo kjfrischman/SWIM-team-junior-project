@@ -54,6 +54,7 @@ void lcd_time_init(void)
 //Update Time on LCD Panel
 void TimeUpdateLCD(short x, short y, short w, short h, char *buffer)
 {
+    tft_setTextSize(1);
     tft_fillRect(x,y,w,h,LCD_Color ); 
     tft_setTextColor(LCD_TXT); 
     tft_setCursor(x, 0);

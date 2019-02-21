@@ -39,9 +39,10 @@ int16_t RFM69::RSSI;          // most accurate RSSI during reception (closest to
 volatile bool RFM69::_haveData;
 RFM69* RFM69::selfPointer;
 
+
+
 bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
 {
-
   const uint8_t CONFIG[][2] =
   {
     /* 0x01 */ { REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY },
@@ -84,29 +85,40 @@ bool RFM69::initialize(uint8_t freqBand, uint8_t nodeID, uint8_t networkID)
     {255, 0}
   };
 
+  select();
 
   do writeReg(REG_SYNCVALUE1, 0xAA); while (readReg(REG_SYNCVALUE1) != 0xaa);
 
   do writeReg(REG_SYNCVALUE1, 0x55); while (readReg(REG_SYNCVALUE1) != 0x55);
 
   for (uint8_t i = 0; CONFIG[i][0] != 255; i++)
-    writeReg(CONFIG[i][0], CONFIG[i][1]);
+    do writeReg(CONFIG[i][0], CONFIG[i][1]); while (readReg(CONFIG[i][0]) != CONFIG[i][1]); //Keep trying until we get the right data back
 
   // Encryption is persistent between resets and can trip you up during debugging.
   // Disable it during initialization so we always start from a known state.
   encrypt(0);
 
-  setHighPower(_isRFM69HW); // called regardless if it's a RFM69W or RFM69HW
+  setHighPower(_isRFM69HW);
   setMode(RF69_MODE_STANDBY);
   
-
   while (((readReg(REG_IRQFLAGS1) & RF_IRQFLAGS1_MODEREADY) == 0x00)); // wait for ModeReady
+  
+  unselect();
 
-  //Config Interrupt
-
+  //Interrupt Code
+  TRISEbits.TRISE0 = 1;
+  CNENEbits.CNIEE0 = 1;
+  IFS3bits.CNEIF = 0;
+  CNPDEbits.CNPDE0 = 1;// Enable pull down. 
+  IEC3bits.CNEIE = 1;
+  IPC30bits.CNEIP = 7;
+  //Detect High Voltage
+  CNCONEbits.EDGEDETECT = 0; //Trigger on Mismatch from last PORTX read
+  CNCONEbits.ON = 1;
+  
+  
   selfPointer = this;
   _address = nodeID;
-  
   
   return true;
 }
@@ -234,11 +246,9 @@ bool RFM69::sendWithRetry(uint8_t toAddress, const void* buffer, uint8_t bufferS
     {
       if (ACKReceived(toAddress))
       {
-        //Serial.print(" ~ms:"); Serial.print(millis() - sentTime);
         return true;
       }
     }
-    //Serial.print(" RETRY#"); Serial.println(i + 1);
   }
   return false;
 }
@@ -305,10 +315,8 @@ void RFM69::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferSize,
 
 // internal function - interrupt gets called when a packet is received
 void RFM69::interruptHandler() {
-    
   if (_mode == RF69_MODE_RX && (readReg(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY))
   {
-    //RSSI = readRSSI();
     setMode(RF69_MODE_STANDBY);
     select();
     SPI_Transfer(REG_FIFO & 0x7F);
@@ -321,7 +329,6 @@ void RFM69::interruptHandler() {
       PAYLOADLEN = 0;
       unselect();
       receiveBegin();
-      //digitalWrite(4, 0);
       return;
     }
 
@@ -346,9 +353,6 @@ void RFM69::interruptHandler() {
 }
 
 // internal function
-void RFM69::isr0() { _haveData = true; }
-
-// internal function
 void RFM69::receiveBegin() {
   DATALEN = 0;
   SENDERID = 0;
@@ -356,9 +360,6 @@ void RFM69::receiveBegin() {
   PAYLOADLEN = 0;
   ACK_REQUESTED = 0;
   ACK_RECEIVED = 0;
-#if defined(RF69_LISTENMODE_ENABLE)
-  RF69_LISTEN_BURST_REMAINING_MS = 0;
-#endif
   RSSI = 0;
   if (readReg(REG_IRQFLAGS2) & RF_IRQFLAGS2_PAYLOADREADY)
     writeReg(REG_PACKETCONFIG2, (readReg(REG_PACKETCONFIG2) & 0xFB) | RF_PACKET2_RXRESTART); // avoid RX deadlocks
@@ -368,8 +369,6 @@ void RFM69::receiveBegin() {
 
 // checks if a packet was received and/or puts transceiver in receive (ie RX or listen) mode
 bool RFM69::receiveDone() {
-//ATOMIC_BLOCK(ATOMIC_FORCEON)
-//{
   if (_haveData) {
   	_haveData = false;
   	interruptHandler();
@@ -385,22 +384,15 @@ bool RFM69::receiveDone() {
   }
   receiveBegin();
   return false;
-//}
 }
 
 // To enable encryption: radio.encrypt("ABCDEFGHIJKLMNOP");
 // To disable encryption: radio.encrypt(null) or radio.encrypt(0)
 // KEY HAS TO BE 16 bytes !!!
 void RFM69::encrypt(const char* key) {
-#if defined(RF69_LISTENMODE_ENABLE)
-  _haveEncryptKey = key;
-#endif
   setMode(RF69_MODE_STANDBY);
   if (key != 0)
   {
-#if defined(RF69_LISTENMODE_ENABLE)
-    memcpy(_encryptKey, key, 16);
-#endif
     select();
     SPI_Transfer(REG_AESKEY1 | 0x80);
     for (uint8_t i = 0; i < 16; i++)
@@ -441,12 +433,12 @@ void RFM69::writeReg(uint8_t addr, uint8_t value)
   unselect();
 }
 
-// select the RFM69 transceiver (save SPI settings, set CS low)
+// select the RFM69 transceiver
 void RFM69::select() {
     PORTGbits.RG1 = 0;
 }
 
-// unselect the RFM69 transceiver (set CS high, restore SPI settings)
+// unselect the RFM69 transceiver
 void RFM69::unselect() {
   PORTGbits.RG1 = 1;
 }
@@ -474,22 +466,6 @@ void RFM69::setHighPowerRegs(bool onOff) {
   writeReg(REG_TESTPA2, onOff ? 0x7C : 0x70);
 }
 
-
-//for debugging
-#define REGISTER_DETAIL 0
-#if REGISTER_DETAIL
-// SERIAL PRINT
-// replace Serial.print("string") with SerialPrint("string")
-#define SerialPrint(x) SerialPrint_P(PSTR(x))
-void SerialWrite ( uint8_t c ) {
-    Serial.write ( c );
-}
-
-void SerialPrint_P(PGM_P str, void (*f)(uint8_t) = SerialWrite ) {
-  for (uint8_t c; (c = pgm_read_byte(str)); str++) (*f)(c);
-}
-#endif
-
 void RFM69::readAllRegs()
 {
   uint8_t regVal;
@@ -504,12 +480,15 @@ void RFM69::readAllRegs()
   long freqCenter = 0;
 #endif
   
+  
   for (uint8_t regAddr = 1; regAddr <= 0x4F; regAddr++)
   {
     select();
     SPI_Transfer(regAddr & 0x7F); // send address + r/w bit
     regVal = SPI_Transfer(0);
     unselect();
+
+    
 
 #if REGISTER_DETAIL 
     switch ( regAddr ) 
@@ -749,6 +728,8 @@ void RFM69::readAllRegs()
   }
   unselect();
 }
+
+
 
 uint8_t RFM69::readTemperature(uint8_t calFactor) // returns centigrade
 {
