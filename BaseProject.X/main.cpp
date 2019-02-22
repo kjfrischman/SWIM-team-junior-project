@@ -47,8 +47,8 @@
 
 
 #include "RTC-RFM-GFX/RFM69/RF_Master.h"
-#include "RTC-RFM-GFX/RTC/RTC2.h"
-//#include "RTC-RFM-GFX/GFX/LCD_Interface.h"
+#include "RTC-RFM-GFX/RTC/RTC.h"
+
 int main(void)
 {
     ///////////////////////////
@@ -71,6 +71,15 @@ int main(void)
      //Enable Multi-Vector Mode
     INTCONSET = _INTCON_MVEC_MASK;
     
+    //Setup PRISS
+    PRISSbits.PRI1SS = 1;
+    PRISSbits.PRI2SS = 2;
+    PRISSbits.PRI3SS = 3;
+    PRISSbits.PRI4SS = 4;
+    PRISSbits.PRI5SS = 5;
+    PRISSbits.PRI6SS = 6;
+    PRISSbits.PRI7SS = 7;
+    
 	///////////////////////////
     //Initialize All Hardware//
     ///////////////////////////
@@ -78,12 +87,8 @@ int main(void)
     //Initialize Real Time Clock
     clock_init();
     
- //   LCD_Init();
-    
     RTC_Config();
-    
-//    lcd_time_init();
-    
+
     //Initialize Radio
     RF_Init();
     
