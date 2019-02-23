@@ -30,7 +30,7 @@ extern "C"
 };
 
 void RF_Init();
-void RX_Handler(void);
+bool RX_Handler(void);
 
 uint8_t * RX_Get_Raw(void);
 

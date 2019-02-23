@@ -60,14 +60,6 @@
 #define IRQ_PIN PORTEbits.RE0
 #define SS_PIN PORTGbits.RG1
 
-//#define RF69_LISTENMODE_ENABLE  //comment this line out to compile sketches without the ListenMode (saves ~2k)
-
-#if defined(RF69_LISTENMODE_ENABLE)
-  // By default, receive for 256uS in listen mode and idle for ~1s
-  #define  DEFAULT_LISTEN_RX_US 256
-  #define  DEFAULT_LISTEN_IDLE_US 1000000
-#endif
-
 class RFM69 {
   public:
     static uint8_t DATA[RF69_MAX_DATA_LEN]; // recv/xmit buf, including header & crc bytes
