@@ -1,5 +1,5 @@
 #ifndef DABOUNCE_H
-#define DABOUNCE_H
+#define DEBOUNCE_H
 
 #define NUM_BUTTONS 5
 #define UNPRESSED 0
