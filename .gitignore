@@ -107,3 +107,6 @@ disassembly/
 *.map
 
 # End of https://www.gitignore.io/api/mplabx
+#
+
+*.db-journal
