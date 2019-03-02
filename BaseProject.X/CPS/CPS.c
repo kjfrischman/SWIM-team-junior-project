@@ -13,9 +13,12 @@ void CPS_config(void){
     // Setup 16-bit capture mode Timer 3
     // IC1CON
     // ICTMR
-  //  IC1CONbit.ICTMRbits;
+    // IC1CONbit.ICTMRbits;
 
-    // Poll ICx Input pin. If the Pin is 3.3v, then trigger interrupt
+    // TRISx = 1
+    // ODCx = 0
+
+    // Read PORTx. If the Pin is 3.3v, then trigger interrupt
 
     // Once interrupt triggers, save current time of RTC and exit interrupt.
 

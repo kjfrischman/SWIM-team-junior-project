@@ -46,9 +46,6 @@
 #pragma config ICESEL = ICS_PGx2        // ICE/ICD Comm Channel Select (Communicate on PGEC2/PGED2)
 
 
-#include "RTC-RFM-GFX/RFM69/RF_Master.h"
-#include "RTC-RFM-GFX/RTC/RTC2.h"
-
 int main(void)
 {
     ///////////////////////////
@@ -76,11 +73,10 @@ int main(void)
     ///////////////////////////
     
     //Initialize Real Time Clock
-    clock_init();
-    RTC_Config();
+ 
     
     //Initialize Radio
-    RF_Init();
+    
     
     while(1)
     {

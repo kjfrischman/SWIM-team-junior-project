@@ -1,6 +1,6 @@
 #pragma once
 
-/ This file contains the drivers for the Conductive Presence sensor.
+// This file contains the drivers for the Conductive Presence sensor.
 // 2/18/2019
 // Peter Stine
 // CPS.h
