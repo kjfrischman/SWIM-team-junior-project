@@ -4,13 +4,11 @@
 
 #include <xc.h>
 #include <sys/attribs.h>
-#include "RTC2.h"
-#include "../RFM69/RF_Master.h"
+#include "RTC.h"
+//#include "../RFM69/RF_Master.h"
 
 
-#define LCD_Color ILI9340_GREY
-#define LCD_TXT ILI9340_WHITE 
-//#define LCD_PRESENT 1
+#define LCD_PRESENT 1
 #define LCD_Width 240
 #define Time_H 12
 #define TIME_SPACE 12
@@ -21,9 +19,9 @@
 #define LCD_MTH 50
 #define LCD_YR 30
 
-#if defined(LCD_PRESENT)
-#include "RTC_Display.h"
-#endif
+
+#include "../GFX/LCD_Interface.h"
+
 
 char buffer[20];
 extern char TIME_INIT[20];
@@ -236,7 +234,7 @@ void app_clock(void)
             clockfield_to_lcdstr(clock_second, 1, buffer);
             #endif
             //Blink LED
-            RF_SEND(CONTROL_PANEL_NODE, "S", 2);
+            RF_SEND(2, "S", 2);
             //Write Current Second Value
             TimeUpdate(LCD_SEC, 0, TIME_SPACE, Time_H);
     
@@ -366,7 +364,7 @@ void RTC_Config(void)
 }
 
 //RTC Vector
-void __ISR_AT_VECTOR(_RTCC_VECTOR, IPL4SOFT) RTC_HANDLER(void)
+void __ISR_AT_VECTOR(_RTCC_VECTOR, IPL4SRS) RTC_HANDLER(void)
 {
     //Call Real Time Clock
     app_clock();
