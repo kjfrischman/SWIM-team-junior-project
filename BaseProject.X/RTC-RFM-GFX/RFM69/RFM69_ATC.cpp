@@ -119,12 +119,13 @@ void RFM69_ATC::sendFrame(uint8_t toAddress, const void* buffer, uint8_t bufferS
     SPI_Transfer(((uint8_t*) buffer)[i]);
   unselect();
 
-  int txStart = millis();
   // no need to wait for transmit mode to be ready since its handled by the radio
   setMode(RF69_MODE_TX);
-  while ((IRQ_PIN) == 0 && millis() - txStart < RF69_TX_LIMIT_MS); // wait for DIO0 to turn HIGH signalling transmission finish
+  while ((IRQ_PIN) == 0); // wait for DIO0 to turn HIGH signalling transmission finish
   //while (readReg(REG_IRQFLAGS2) & RF_IRQFLAGS2_PACKETSENT == 0x00); // wait for ModeReady
   setMode(RF69_MODE_STANDBY);
+  IFS3bits.CNEIF = 0;
+
 }
 
 //=============================================================================

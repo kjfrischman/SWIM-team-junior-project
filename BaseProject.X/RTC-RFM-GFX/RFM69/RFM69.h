@@ -57,16 +57,8 @@
 #define RFM69_CTL_SENDACK   0x80
 #define RFM69_CTL_REQACK    0x40
 
-#define IRQ_PIN PORTFbits.RF8
-#define SS_PIN PORTGbits.RG1;
-
-//#define RF69_LISTENMODE_ENABLE  //comment this line out to compile sketches without the ListenMode (saves ~2k)
-
-#if defined(RF69_LISTENMODE_ENABLE)
-  // By default, receive for 256uS in listen mode and idle for ~1s
-  #define  DEFAULT_LISTEN_RX_US 256
-  #define  DEFAULT_LISTEN_IDLE_US 1000000
-#endif
+#define IRQ_PIN PORTEbits.RE0
+#define SS_PIN PORTGbits.RG1
 
 class RFM69 {
   public:
@@ -80,8 +72,17 @@ class RFM69 {
     static int16_t RSSI; // most accurate RSSI during reception (closest to the reception). RSSI of last packet.
     static uint8_t _mode; // should be protected?
 
-    RFM69(uint8_t slaveSelectPin, uint8_t interruptPin, bool isRFM69HW) //interruptNum is now deprecated
-                : _slaveSelectPin(slaveSelectPin), _interruptPin(interruptPin), _isRFM69HW(isRFM69HW) {};
+    
+    RFM69(uint8_t slaveSelectPin = 0, uint8_t interruptPin = RF69_IRQ_PIN, bool isRFM69HW=false, uint8_t interruptNum= 0) 
+    {
+      _slaveSelectPin = slaveSelectPin;
+      _interruptPin = interruptPin;
+      _mode = RF69_MODE_STANDBY;
+      _promiscuousMode = false;
+      _powerLevel = 31;
+      _isRFM69HW = isRFM69HW;
+    }
+    
     bool initialize(uint8_t freqBand, uint8_t ID, uint8_t networkID=1);
     void setAddress(uint8_t addr);
     void setNetwork(uint8_t networkID);
@@ -102,7 +103,10 @@ class RFM69 {
     void sleep();
     uint8_t readTemperature(uint8_t calFactor=0); // get CMOS temperature (8bit)
     void rcCalibration(); // calibrate the internal RC oscillator for use in wide temperature variations - see datasheet section [4.3.5. RC Timer Accuracy]
-
+void haveData(bool data)
+    {
+        _haveData = data;
+    }
     // allow hacking registers by making these public
     uint8_t readReg(uint8_t addr);
     void writeReg(uint8_t addr, uint8_t val);

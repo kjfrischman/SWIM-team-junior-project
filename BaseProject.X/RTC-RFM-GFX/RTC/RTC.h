@@ -1,6 +1,16 @@
+/* 
+ * File:   RTC.h
+ * Author: kjfrischman
+ *
+ * Created on February 20, 2019, 10:45 PM
+ */
 
-#ifndef RTC2_H
-#define RTC2_H
+#ifndef RTC_H
+#define	RTC_H
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 #define HOUR_POS    0x87
 #define MIN_POS     0x8A
@@ -24,10 +34,15 @@ void    lcd_time_init(void);
 
 void clock_day_inc(void);
 void clock_month_inc(void);
-void clockfield_to_lcdstr (int clockfield, int field_type);
 void clock_init(void);
 void RTC_Config(void);
 void app_clock(void);
 void TimeUpdate(short x, short y, short w, short h);
 
+
+#ifdef	__cplusplus
+}
 #endif
+
+#endif	/* RTC_H */
+

@@ -42,7 +42,7 @@ void tft_init_hw(void) {
     _width = ILI9340_TFTWIDTH;
     _height = ILI9340_TFTHEIGHT;
 
-    //Setup SPI2 For Transmission
+    //Setup SPI4 For Transmission
     //SPI Configuration
     //SPI Clock 2MHz 
     SPI4BRG = 0;

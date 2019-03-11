@@ -45,6 +45,14 @@
 #pragma config JTAGEN = OFF             // JTAG Enable (JTAG Disabled)
 #pragma config ICESEL = ICS_PGx2        // ICE/ICD Comm Channel Select (Communicate on PGEC2/PGED2)
 
+//Radio
+#include "RTC-RFM-GFX/RFM69/RF_Master.h"
+//Real Time Clock
+#include "RTC-RFM-GFX/RTC/RTC.h"
+
+#include "RTC-RFM-GFX/HallEffect/HALL_EFFECT.h"
+
+#include "RTC-RFM-GFX/HallEffect/PUMP.h"
 
 int main(void)
 {
@@ -68,14 +76,35 @@ int main(void)
      //Enable Multi-Vector Mode
     INTCONSET = _INTCON_MVEC_MASK;
     
+    
+    PRISSbits.PRI1SS = 1;
+    PRISSbits.PRI2SS = 2;
+    PRISSbits.PRI3SS = 3;
+    PRISSbits.PRI4SS = 4;
+    PRISSbits.PRI5SS = 5;
+    PRISSbits.PRI6SS = 6;
+    PRISSbits.PRI7SS = 7;
+    
 	///////////////////////////
     //Initialize All Hardware//
     ///////////////////////////
     
     //Initialize Real Time Clock
- 
+    clock_init();
     
-    //Initialize Radio
+    RTC_Config();
+    
+    RF_Init();
+    
+    PUMP_INIT();
+    
+    HALL_EFFECT_INIT(10);
+    
+    PUMP_ON();
+    
+    RF_Data_Init();
+    
+    asm("ei");
     
     
     while(1)

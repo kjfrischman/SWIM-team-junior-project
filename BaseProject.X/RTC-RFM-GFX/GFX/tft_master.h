@@ -158,7 +158,7 @@ unsigned char tft_spiread(void);
 unsigned char tft_readdata(void);
 unsigned char tft_readcommand8(unsigned char c);
 
-unsigned short _width, _height;
+volatile unsigned short _width, _height;
 
 void delay_ms(unsigned long);
 void delay_us(unsigned long);

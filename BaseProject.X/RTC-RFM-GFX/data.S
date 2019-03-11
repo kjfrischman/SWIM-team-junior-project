@@ -39,4 +39,32 @@ button4:		.word 0
 //
 // Global Data variables used in conjunction with the app_clock file.
 
+    
+    
+// Global Variables For Sensor Levels Transmitted By Radio
+//extern int GlobalFlowRate;
+//extern int GlobalTankLevel;
+//extern int GlobalSurfaceLevel;
+       
+.global GlobalFlowRate
+.global GlobalTankLevel
+.global GlobalSurfaceLevel
 
+.data
+    GlobalFlowRate:	    .word 0
+    GlobalTankLevel:	    .word 0
+    GlobalSurfaceLevel:	    .word 0
+    
+    
+.global UP_BUTTON
+.global DOWN_BUTTON
+.global ENTER_BUTTON
+.global LEFT_BUTTON
+.global RIGHT_BUTTON
+    
+.data
+    UP_BUTTON:		.word 0
+    DOWN_BUTTON:	.word 0
+    ENTER_BUTTON:	.word 0
+    LEFT_BUTTON:	.word 0
+    RIGHT_BUTTON:	.word 0
