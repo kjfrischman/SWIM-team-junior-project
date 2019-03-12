@@ -16,6 +16,7 @@
 .global button2
 .global button3
 .global button4
+
     
 // Variable declarations
 .data
@@ -68,3 +69,32 @@ button4:		.word 0
     ENTER_BUTTON:	.word 0
     LEFT_BUTTON:	.word 0
     RIGHT_BUTTON:	.word 0
+    
+    
+    //////////////////////////////////////////////////
+    //Settings Global Vars
+    /////////////////////////////////////////////////
+    
+.global PUMP_STATE
+.global TANK_HEIGHT
+.global TANK_DIAMETER
+.global STAFF_HEIGHT
+.global MIN
+.global HOUR
+.global SEC
+.global DAY
+.global MONTH
+.global YEAR
+.global UNITS
+.global BUZZER_STATE
+.global PUMP_DELAY
+    
+    
+    .data
+PUMP_STATE:	    .word 0
+TANK_HEIGHT:	    .word 10
+TANK_DIAMETER:	    .word 10
+STAFF_HEIGHT:	    .word 10
+UNITS:		    .word 0
+BUZZER_STATE:	    .word 0
+PUMP_DELAY:	    .word 10

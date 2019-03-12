@@ -88,7 +88,7 @@ void lcd_time_init(void)
     
     //MUST be called AFTER LCD_Init
     //Set 'Time:    :  :  '
-    tft_fillRect(0,0,240,12,LCD_Color );
+    tft_fillRect(0,0,240,18,LCD_Color );
     
     tft_setCursor(0, 0);
     tft_setTextColor(LCD_TXT );  
@@ -161,6 +161,6 @@ void clockfield_to_lcdstr (int clockfield, int field_type, char buffer[])
     //Place In Buffer
     buffer[0] = clockfield;
     buffer[1] = temp;
-    buffer[2] = '\n';
+    buffer[2] = '\0';
 
 }

@@ -10,7 +10,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "guiMain.h"
-//#include "../SD/SD_Driver.h"
 #include "../GFX/tft_gfx.h"
 #include "../GFX/tft_master.h"
 #include "../SD/SD_Driver.h"
@@ -19,12 +18,26 @@
 GUI_FLOW_T flow_data;
 GUI_LEVELS_T level_data;
 GUI_STATS_T stats_data;
+GUI_CP_T cp_data;
+GUI_SURFACE_T surface_data;
+
+extern Summary_Data_T summary_data;
 
 extern int UP_BUTTON;
 extern int DOWN_BUTTON;
 extern int ENTER_BUTTON;
 extern int LEFT_BUTTON;
 extern int RIGHT_BUTTON;
+
+
+//Extern Settings Variables
+extern uint8_t PUMP_STATE;
+extern uint8_t TANK_HEIGHT;
+extern uint8_t TANK_DIAMETER;
+extern uint8_t STAFF_HEIGHT;
+extern uint8_t UNITS;
+extern uint8_t BUZZER_STATE;
+extern uint8_t PUMP_DELAY;
 
 int gui_state;
 
@@ -40,6 +53,8 @@ int gui_load_bmp(char * location)
     int imageIdx = 0;
     char tempRGB;
     int read;
+    
+    
     
     FRESULT res = f_open(&fileptr, location, FA_READ);
     
@@ -62,7 +77,11 @@ int gui_load_bmp(char * location)
          
         }
         
+        asm("di");
+        
         f_read(&fileptr, (void *)bitmapImage, (bmpFH.size), &read);
+        
+        asm("ei");
         
         if (bitmapImage == NULL)
         {
@@ -74,20 +93,27 @@ int gui_load_bmp(char * location)
         int y = 320;
         for (imageIdx = 2; imageIdx < bmpFH.size; imageIdx+=2)
         {
-            uint16_t pixel;
+           
               
-            pixel = (bitmapImage[imageIdx+1]<<8) | (bitmapImage[imageIdx]);
+            uint16_t pixel = (bitmapImage[imageIdx+1]<<8) | (bitmapImage[imageIdx]);
+            x++;
+            
+            //Store Pixels in Array and write 1 line at a time
             
             if(x == 240)
             {
+                
                 x = 0;
                 y--;
             }
-            if(y >= 15) tft_drawPixel(x,y, pixel);
             
-            x++;
+            if(y >= 15) tft_drawPixel(x,y,pixel);
+            
             
         }
+        
+        //Write lines in loop
+        
         
         free(bitmapImage);
         f_close(&fileptr);
@@ -97,10 +123,7 @@ int gui_load_bmp(char * location)
         //Bad Open
     }
     
-    
-    
-    
-    
+
 }
 
 void struct_fix(BMPHeaderTMP * bmpFHT, BMPHeader * bmpFH)
@@ -166,15 +189,20 @@ void gui_init(void)
  * 
  */
 
+uint8_t newpage = 0;
+
 void __ISR_AT_VECTOR(_TIMER_3_VECTOR, IPL4SRS) gui_polling_isr(void) 
 {
-    uint8_t newpage = 0;
     
+    static uint8_t old_cursor = -1;
+    static uint8_t old_select = 0;
     //*** Handle Inputs ***  
     if (gui_page == SETTINGS){ // only track cursor on relevant pages
         if (item_selected == 0x0){
-            cursor += UP_BUTTON;
-            cursor -= DOWN_BUTTON;
+            if(UP_BUTTON && cursor < NUM_SETTINGS)cursor++;
+            else if (UP_BUTTON && cursor == NUM_SETTINGS)cursor = 0;
+            else if(DOWN_BUTTON && cursor > 0) cursor--;
+            else if(DOWN_BUTTON && cursor == 0) cursor = NUM_SETTINGS;
         }
         else { // Item selected, gather data entry direction
             if (UP_BUTTON) selection_input = 1;
@@ -189,13 +217,13 @@ void __ISR_AT_VECTOR(_TIMER_3_VECTOR, IPL4SRS) gui_polling_isr(void)
         item_selected = 0x0; // unselect item on pages without items
     }
     
-    if (LEFT_BUTTON){
-        if (gui_page == 0) gui_state = NUM_PAGES;
+    if (RIGHT_BUTTON){
+        if (gui_page == 0) gui_page = NUM_PAGES-1;
         else gui_page--;
         
        newpage = 1;
     }
-    if (RIGHT_BUTTON){
+    if (LEFT_BUTTON){
         if (gui_page == (NUM_PAGES - 1)) gui_page = 0x0;
         else gui_page++;
         
@@ -223,7 +251,7 @@ void __ISR_AT_VECTOR(_TIMER_3_VECTOR, IPL4SRS) gui_polling_isr(void)
             }
             
             case SETTINGS:{
-            gui_load_bmp(SETTINGS_PAGE);
+                draw_settings_init();
             }
         }
         }
@@ -248,21 +276,116 @@ void __ISR_AT_VECTOR(_TIMER_3_VECTOR, IPL4SRS) gui_polling_isr(void)
         }
         case SETTINGS: {
             
-            switch(cursor){
-                case 0:
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    
-                    break;
-                    
+            if(cursor != old_cursor)
+            {
+                old_cursor = cursor;
+                switch(cursor){
+                    case 0:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,60,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 260 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 80 , 240, 20, 0x0000);
+                        break;
+                    case 1:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,80,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 60 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 100 , 240, 20, 0x0000);
+                        break;
+                    case 2:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,100,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 80 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 120 , 240, 20, 0x0000);
+                        break;
+                    case 3:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,120,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 100 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 140 , 240, 20, 0x0000);
+                        break;
+
+                    case 4:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,140,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 120 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 160 , 240, 20, 0x0000);
+                        break;
+
+                    case 5:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,160,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 140 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 180 , 240, 20, 0x0000);
+                        break;
+
+                    case 6:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,180,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 160 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 200 , 240, 20, 0x0000);
+                        break;
+
+                    case 7:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,200,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 180 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 220 , 240, 20, 0x0000);
+                        break;
+
+                    case 8:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,220,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 200 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 240 , 240, 20, 0x0000);
+                        break;
+
+                    case 9:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,240,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 220 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 260 , 240, 20, 0x0000);
+                        break;
+
+                    case 10:
+                        //Hightlight Settings First (x,y,w,h, clr)
+                        tft_drawRect(0,260,240,20,0xFC00);
+                        //UnSelect Settings Last
+                        tft_drawRect(0, 240 , 240, 20, 0x0000);
+                        //unselect Next
+                        tft_drawRect(0, 60 , 240, 20, 0x0000);
+                        break;
+
+                }
+
+                
+            
             }
             
-            draw_settings(cursor, item_selected);
+            draw_settings(cursor, &item_selected, selection_input, &old_cursor);
+            
             break;
+            
         }
     
     }
@@ -277,7 +400,7 @@ void draw_levels(GUI_LEVELS_T * data)
     if (data->newdata)
     {
         data->newdata = 0;
-      //Draw Rect
+        //Draw Rect
         tft_fillRect(0, 275, 240, 45, 0xFFFF);
         tft_setTextColor(0x0000);
         //Move Cursor
@@ -298,19 +421,251 @@ void draw_levels(GUI_LEVELS_T * data)
         tft_writeString("%          ");
         //Write Units
         tft_writeString("Full");  
+        
+        
+        //Draw Cool Tank Levels
+        tft_fillRect(48,80,96,146, 0x059F);
+        int percent = atoi(data->res_fill_percent);
+        percent = 100 - percent ;
+        int height = (146* (percent) / 100);
+        //if(height == 0) height = 146;
+        tft_fillRect(48,80,96, height,0xFFFF);
     }
 }
 void draw_flow(GUI_FLOW_T * data)
 {
-    
+    if (data->newdata)
+    {
+        data->newdata = 0;
+        //Draw Rect
+        tft_fillRect(0, 275, 240, 45, 0xFFFF);
+        tft_setTextColor(0x0000);
+        //Move Cursor
+        tft_setCursor(10, 275);
+        //Set Font Size
+        tft_setTextSize(2);
+        //Write Variable
+        
+        tft_writeString(data->flow_rate);
+        //Tab
+        tft_writeString("           ");
+        //Write Units
+        tft_writeString("GPH");  
+    }
     
 }
 void draw_stats(GUI_STATS_T * data)
 {
-    
+    //Purposly Ignore new data to cycle instead
+    uint8_t delay = 0;
+    uint8_t cycle = 0;
+    if (delay = 50)
+    {
+        delay = 0;
+        
+        //Draw bottom 2 items in a loop
+        switch(cycle)
+        {
+            case 0:
+                //Cyclce first 2 data items
+                //Draw Rect
+                tft_fillRect(0, 275, 240, 45, 0xFFFF);
+                tft_setTextColor(0x0000);
+                //Move Cursor
+                tft_setCursor(10, 275);
+                //Set Font Size
+                tft_setTextSize(2);
+                //Write Variable
+
+                tft_writeString(data->todays_flow);
+                //Tab
+                tft_writeString("   ");
+                //Write Units
+                tft_writeString("Gallons Used Today");  
+                //Enter
+                tft_setCursor(10, 295);
+                tft_writeString(data->week_flow);
+                //Tab
+                tft_writeString("   ");
+                //Write Units
+                tft_writeString("Gallons This Week");  
+                cycle = 1;
+                break;
+            
+            case 1:
+                //Draw Rect
+                tft_fillRect(0, 275, 240, 45, 0xFFFF);
+                tft_setTextColor(0x0000);
+                //Move Cursor
+                tft_setCursor(10, 275);
+                //Set Font Size
+                tft_setTextSize(2);
+                //Write Variable
+
+                tft_writeString(data->month_flow);
+                //Tab
+                tft_writeString("   ");
+                //Write Units
+                tft_writeString("Gallons This Month");  
+                //Enter
+                tft_setCursor(10, 295);
+                tft_writeString(data->year_flow);
+                //Tab
+                tft_writeString("   ");
+                //Write Units
+                tft_writeString("Gallons This Year");  
+                cycle = 0;
+                break;
+            
+            
+        }
+    }
+    else delay++;
 }
-void draw_settings(uint8_t curs, uint8_t item_sel)
+void draw_settings(uint8_t curs, uint8_t * item_sel, int val, uint8_t  * old_cursor)
 {
     
+     char buffer [20];
+    
+    if(*item_sel)
+    {
+
+        switch (curs)
+        {
+            case 0:
+                //Toggle Pump
+                if(PUMP_STATE) PUMP_STATE = 0;
+                else PUMP_STATE = 1;
+                newpage = 1;
+                *item_sel = 0;
+                snprintf(buffer, 20, "PT%d", PUMP_STATE);
+                RF_SEND(buffer);
+                break;
+
+            case 1:
+                if(val == 1 && PUMP_DELAY < 0xFFFF) 
+                {
+                    PUMP_DELAY ++;
+                    newpage = 1;
+                }
+                else if (val == -1 && PUMP_DELAY >= 0) 
+                {
+                    PUMP_DELAY --;
+                    newpage = 1;
+                }
+                snprintf(buffer, 20, "PD%d", PUMP_DELAY);
+                RF_SEND(buffer);
+                
+                break;
+
+
+            case 2:
+                if(val == 1 && TANK_HEIGHT < 0xFFFF) 
+                {
+                    TANK_HEIGHT ++;
+                    newpage = 1;
+                }
+                else if (val == -1 && TANK_HEIGHT >= 0) 
+                {
+                    TANK_HEIGHT --;
+                    newpage = 1;
+                }
+                
+                snprintf(buffer, 20, "TH%d", TANK_HEIGHT);
+                RF_SEND(buffer);
+                
+                break;
+                
+            case 3:
+                if(val == 1 && TANK_DIAMETER < 0xFFFF) 
+                {
+                    TANK_DIAMETER ++;
+                    newpage = 1;
+                }
+                else if (val == -1 && TANK_DIAMETER >= 0) 
+                {
+                    TANK_DIAMETER --;
+                    newpage = 1;
+                }
+                
+                snprintf(buffer, 20, "TD%d", TANK_DIAMETER);
+                RF_SEND(buffer);
+                
+                break;
+                
+            case 4:
+                if(val == 1 && STAFF_HEIGHT < 0xFFFF) 
+                {
+                    STAFF_HEIGHT ++;
+                    newpage = 1;
+                }
+                else if (val == -1 && STAFF_HEIGHT >= 0) 
+                {
+                    STAFF_HEIGHT --;
+                    newpage = 1;
+                }
+                
+                snprintf(buffer, 20, "SH%d", STAFF_HEIGHT);
+                RF_SEND(buffer);
+                
+                break;
+                
+                
+            case 5:
+                //Toggle Pump
+                if(UNITS) UNITS = 0;
+                else UNITS = 1;
+                newpage = 1;
+                *item_sel = 0;
+                break;
+                
+            case 6:
+                //Toggle Pump
+                if(BUZZER_STATE) BUZZER_STATE = 0;
+                else BUZZER_STATE = 1;
+                newpage = 1;
+                *item_sel = 0;
+                break;
+        }
+        
+        *old_cursor = -1;
+    }
+    
+}
+
+void draw_settings_init(void)
+{
+    asm("di");
+    
+    char dataBuffer[50];
+    
+    char * settingsArray[] = {"Toggle Pump   ", "Pump Delay   " , "Tank Height  ", "Tank Diameter", 
+                              "Staff Height " , "Toggle Units  " , "Buzzer Toggle " ,"Change Date", "Change Time",
+                              "Eject SD", "Mount SD"};
+    
+    uint8_t * dataArray[] = {&PUMP_STATE, &PUMP_DELAY, &TANK_HEIGHT, &TANK_DIAMETER, &STAFF_HEIGHT, 
+                              &UNITS, &BUZZER_STATE};
+    
+    //Draw Black Background
+    tft_fillRect(0, 15, 240, 305, 0x0000);
+    //Draw Settings Text
+    tft_setTextColor(0xFFFF);
+    //Move Cursor
+    tft_setCursor(10, 30);
+    //Set Font Size
+    tft_setTextSize(3);
+    tft_writeString("Settings");
+    tft_setTextSize(1.5);        
+    //Loop Writing Stuff
+    int count = 0;
+    for (; count < NUM_SETTINGS+1; count++)
+    {
+        tft_setCursor(10, (20*(count+1)) + SETTINGS_OFFSET);
+        if (count < 7) snprintf(dataBuffer, 50,"%s             %d", settingsArray[count], *(dataArray[count]));
+        else snprintf(dataBuffer, 50, "%s", settingsArray[count]);
+        tft_writeString(dataBuffer);
+    }
+    
+    asm("ei");
 }
 

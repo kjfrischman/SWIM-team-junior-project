@@ -52,7 +52,7 @@
 #define SOCKINS	0 // Pretend card is always inserted (1<<11)	/* Card detect switch (RJ5) */
 
 #define	FCLK_SLOW()	SPI2BRG = 64		/* Set slow clock (100k-400k) */
-#define	FCLK_FAST()	SPI2BRG = 2		/* Set fast clock (depends on the CSD) */
+#define	FCLK_FAST()	SPI2BRG = 4	/* Set fast clock (depends on the CSD) */
 
 
 

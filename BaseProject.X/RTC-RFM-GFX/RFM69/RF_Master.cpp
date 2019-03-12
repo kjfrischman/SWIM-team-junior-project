@@ -1,15 +1,61 @@
 
-#include <xc.h>
-#include <sys/attribs.h>
+
 #include <string.h>
 #include "RFM69.h"
 #include "RFM69_ATC.h"
 #include "RF_Master.h"
-#include "../HallEffect/HALL_EFFECT.h"
-#include "../HallEffect/PUMP.h"
 
 RFM69_ATC radio;
 
+#define DATA_STRUCT_SIZE 4
+
+typedef struct{
+    // uint8_t level ?
+    char res_fill_percent[DATA_STRUCT_SIZE];
+    char src_level[DATA_STRUCT_SIZE];
+    uint8_t newdata;
+}GUI_LEVELS_T;
+
+typedef struct{
+    char surface_height[DATA_STRUCT_SIZE];
+    uint8_t newdata;
+}GUI_SURFACE_T;
+
+typedef struct{
+    char flow_rate[DATA_STRUCT_SIZE];
+    uint8_t newdata;
+    // daily use, other things?
+}GUI_FLOW_T;
+
+typedef struct{
+    char todays_flow[DATA_STRUCT_SIZE];
+    char week_flow[DATA_STRUCT_SIZE];
+    char month_flow[DATA_STRUCT_SIZE];
+    char year_flow[DATA_STRUCT_SIZE];
+    uint8_t newdata;
+}GUI_STATS_T;
+    
+    typedef struct{
+        uint8_t newdata;
+        char presence[DATA_STRUCT_SIZE];
+    }GUI_CP_T;
+    
+
+
+//Extern Global Vars
+extern GUI_FLOW_T flow_data;
+extern GUI_LEVELS_T level_data;
+extern GUI_STATS_T stats_data;
+extern GUI_CP_T cp_data;
+extern GUI_SURFACE_T surface_data;
+
+extern uint8_t PUMP_STATE;
+extern uint8_t TANK_HEIGHT;
+extern uint8_t TANK_DIAMETER;
+extern uint8_t STAFF_HEIGHT;
+extern uint8_t UNITS;
+extern uint8_t BUZZER_STATE;
+extern uint8_t PUMP_DELAY;
 
 void RF_Init()
 {
@@ -36,9 +82,6 @@ void RF_Init()
     radio.enableAutoPower(ATC_RSSI);
     radio.promiscuous(false);
     
-    
-    //Setup Radio
-    
     LED_LAT = 0;
 }
 
@@ -61,45 +104,101 @@ void RF_SEND(uint8_t node, char * message, uint8_t attempts)
     if (!(RX_Handler())) RX_Handler();
     
 } 
+/*
+ * Recieves Radio data and parses
+ * S = second heartbeat
+ * TL = Tank level and percent
+ * FR = Flow rate 
+ * CP = Conductive Presence
+ * ES = E-Stop (pump has e stopped)
+ * ST = Stats
+ */
+
 
 bool RX_Handler(void)
 {
+    int count = 0;
+    
     if(radio.receiveDone())
     {
+       char radiobuff[70];
+        int length = radio.DATALEN;
+        
+       // snprintf(radiobuff, length,"%d",radio.DATA);
             
         //Got Some Data
         if(radio.DATA[0] == 'H')
         {
             LED_LAT = !LED_LAT;
         }
+        else if(radio.DATA[0] == 'T' && radio.DATA[1] == 'L')
+        {
+            /*
+            float res_fill_percent;
+            float src_level;
+            uint8_t newdata;
+             */
+            //Got Tank Level Data, Load it up
+            
+            while(count != 7)
+            {
+                radiobuff[count] = radio.DATA[count];
+                count++;
+            }
+
+            level_data.newdata = 1;
+            level_data.res_fill_percent[0] = radiobuff[2];
+            level_data.res_fill_percent[1] = radiobuff[3];//4 bytes
+            level_data.src_level[0] = radiobuff[4]; //4 bytes
+            level_data.src_level[1] = radiobuff[5];
+        }   
+        else if(radio.DATA[0] == 'F' && radio.DATA[1] == 'R')
+        {
+            //Flow Rate
+            flow_data.newdata = 1;
+            //Loop until null terminated
+            while(radio.DATA[count+2] != '\0' && count <= DATA_STRUCT_SIZE)
+            {
+                flow_data.flow_rate[count] = radio.DATA[count+2];
+                count++;
+            }
+        }
+        else if(radio.DATA[0] == 'C' && radio.DATA[1] == 'P')
+        {
+            //Conductive Presence True False
+            cp_data.newdata = 1;
+            cp_data.presence[0] = radio.DATA[2];
+        }
+        
+        else if(radio.DATA[0] == 'E' && radio.DATA[1] == 'S')
+        {
+            //Pump E-Stop, Display Error Message & Sound
+        }
+        
+        
+        else if(radio.DATA[0] == 'S' && radio.DATA[1] == 'H')
+        {
+            //Surface Water Height
+            surface_data.newdata = 1;
+            //Loop until null terminated
+            while(radio.DATA[count+2] != '\0' && count <= DATA_STRUCT_SIZE)
+            {
+                surface_data.surface_height[count] = radio.DATA[count+2];
+            }
+        }
+        
         else if(radio.DATA[0] == 'P')
         {
-            if (radio.DATA[1] == 'T')
+            if(radio.DATA[1] == 'S')
             {
-                //Set pump state
-                PUMP_TOGGLE(radio.DATA[2]);
+                PUMP_STATE = (radio.DATA[2]);
             }
-            else if(radio.DATA[1] == 'D')
+            else if (radio.DATA[1] == 'D')
             {
-                //Delay for the pump
-            }
-            
-        }
-        else if(radio.DATA[0] == 'T')
-        {
-            if(radio.DATA[1] == 'H')
-            {
-                //Tank Height
-            }
-            else if(radio.DATA[1] == 'D')
-            {
-                //Tank Diameter
+                PUMP_DELAY = (radio.DATA[2]);
             }
         }
-        else if (radio.DATA[0] == 'S' && radio.DATA[1] == 'H')
-        {
-            //Surface Height
-        }
+        
         
         if(radio.ACKRequested())
         {
@@ -133,106 +232,4 @@ void __ISR_AT_VECTOR(_CHANGE_NOTICE_E_VECTOR, IPL7SRS) RX_IRQ() {
   if(PORTEbits.RE0 == 1)radio.haveData(true);
   //Do Something?
   RX_Handler();
-}
-
-//Radio Transmit Setup
-void RF_Data_Init(void)
-{
-    //Setup Timer 5
-    T5CONbits.TCKPS = 6;
-    //1025
-    PR5 = 2050;
-    
-    IEC0bits.T5IE = 1;
-    IFS0bits.T5IF = 0;
-    IPC6bits.T5IP = 5;
-    
-    //100ms Delay
-    T5CONbits.ON = 1;
-}
-
-//Sensor Data Transmit Function
-void __ISR_AT_VECTOR (_TIMER_5_VECTOR, IPL5SRS)RF_Data_Prep(void)
-{
-    static sensor_list sensor = Flow;
-    char dataBuffer[50];
-    static int cycles = 0;
-    
-    //Turn off Timer
-    T5CONbits.ON = 0;
-    IFS0bits.T5IF = 0;
-    //Clear Val
-    TMR5 = 0;
-    
-    switch (sensor)
-    {
-        case Flow:
-        {
-            float hallRate = HALL_EFFECT_GET_RATE(0);
-            snprintf(dataBuffer, 50,"FR%02.2f", hallRate);
-            sensor = Conductive;
-            break;
-        }
-        
-        case Conductive:
-        {
-            //snprintf(dataBuffer, 50, "CP%1d", );
-            sensor = Tank;
-            break;
-        }
-        
-        case Tank:
-        {
-            //snprintf(dataBuffer, 50,"TL%02.2f%02.2f", , );
-            sensor = Height;
-            break;
-        }
-        
-        case Height:
-        {
-            //snprintf(dataBuffer, 50, "SH%02.2f",);
-            sensor = Heart;
-            break;
-        }
-        
-        case Heart:
-        {
-            if(cycles >= 5)
-            {
-                dataBuffer[0] = 'H';
-                dataBuffer[1] = '\0';
-                cycles = 0;
-            }
-            
-            sensor = Pump;
-            
-            break;
-        }
-        
-        case Pump:
-        {
-            snprintf(dataBuffer, 50, "PS");
-            sensor = Delay;
-        }
-        
-        case Delay:
-        {
-            snprintf(dataBuffer, 50, "PD");
-        }
-        
-        default:
-        {
-            //IDK how we got here, but reset to a known state
-            dataBuffer[0] = '\0';
-            sensor = Flow;
-            break;
-        }
-           
-    }
-    
-    RF_SEND(3, dataBuffer, 2);
-    cycles++; 
-    
-    //Start Timer Again
-    T5CONbits.ON = 1;
 }

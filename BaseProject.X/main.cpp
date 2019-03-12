@@ -49,10 +49,16 @@
 #include "RTC-RFM-GFX/RFM69/RF_Master.h"
 //Real Time Clock
 #include "RTC-RFM-GFX/RTC/RTC.h"
+//LCD
+#include "RTC-RFM-GFX/GFX/LCD_Interface.h"
+//SD
+#include "RTC-RFM-GFX/SD/SD_Driver.h"
+//GUI
+#include "RTC-RFM-GFX/GUI/guiMain.h"
 
-#include "RTC-RFM-GFX/HallEffect/HALL_EFFECT.h"
-
-#include "RTC-RFM-GFX/HallEffect/PUMP.h"
+#include "RTC-RFM-GFX/GUI/guiMain.h"
+//buttons
+#include "RTC-RFM-GFX/Buttons/Debounce.h"
 
 int main(void)
 {
@@ -92,17 +98,23 @@ int main(void)
     //Initialize Real Time Clock
     clock_init();
     
+    LCD_Init();
+    
     RTC_Config();
+    
+    lcd_time_init();
     
     RF_Init();
     
-    PUMP_INIT();
+    SD_Init();
     
-    HALL_EFFECT_INIT(10);
+    //Load image?
+   gui_load_bmp("TEST.BMP");
+   gui_load_bmp("TEST2.BMP");
     
-    PUMP_ON();
-    
-    RF_Data_Init();
+   gui_init();
+   
+   DEBOUNCE_INIT();
     
     asm("ei");
     

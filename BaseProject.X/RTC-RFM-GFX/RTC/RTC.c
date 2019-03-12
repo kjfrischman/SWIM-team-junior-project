@@ -7,7 +7,7 @@
 #include "RTC.h"
 
 
-//#define LCD_PRESENT 1
+#define LCD_PRESENT 1
 #define LCD_Width 240
 #define Time_H 12
 #define TIME_SPACE 12
@@ -232,6 +232,8 @@ void app_clock(void)
             #if defined(LCD_PRESENT)
             clockfield_to_lcdstr(clock_second, 1, buffer);
             #endif
+            //Blink LED
+            RF_SEND(2, "H", 2);
             //Write Current Second Value
             TimeUpdate(LCD_SEC, 0, TIME_SPACE, Time_H);
     

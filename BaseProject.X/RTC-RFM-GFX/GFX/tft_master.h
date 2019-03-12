@@ -30,7 +30,8 @@
 extern "C" {
 #endif
 
-
+#include <xc.h>
+    
 #define _dc         LATFbits.LATF1
 #define TRIS_dc     TRISFbits.TRISF1
 #define _dc_high()  {LATFSET = _PORTF_RF1_MASK;}
@@ -157,6 +158,7 @@ void tft_setRotation(unsigned char m);
 unsigned char tft_spiread(void);
 unsigned char tft_readdata(void);
 unsigned char tft_readcommand8(unsigned char c);
+void tft_drawFastHLineArray(short x, short y, short w, uint16_t * color);
 
 volatile unsigned short _width, _height;
 

@@ -412,7 +412,7 @@ void tft_write(unsigned char c){
   } else if (c == '\r') {
 
   } else if (c == '\t'){
-      int new_x = cursor_x + tabspace;
+      int new_x = cursor_x + (tabspace - (cursor_x%tabspace));
       if (new_x < _width){
           cursor_x = new_x;
       }

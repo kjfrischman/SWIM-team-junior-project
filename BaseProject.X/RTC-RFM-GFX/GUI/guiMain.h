@@ -13,6 +13,8 @@ extern "C" {
 #endif
 
 #define NUM_PAGES 4
+#define NUM_SETTINGS 10
+#define SETTINGS_OFFSET 45
     
 #define LEVELS 0
 #define LEVELS_PAGE "LVL.BMP"
@@ -26,28 +28,47 @@ extern "C" {
 #define SETTINGS 3
 #define SETTINGS_PAGE "S1.BMP"   
     
-    typedef struct{
+#define DATA_STRUCT_SIZE 4
+
+typedef struct{
         // uint8_t level ?
-        char res_fill_percent[4];
-        char src_level[4];
+        char res_fill_percent[DATA_STRUCT_SIZE];
+        char src_level[DATA_STRUCT_SIZE];
         uint8_t newdata;
     }GUI_LEVELS_T;
     
     typedef struct{
-        char flow_rate[4];
+        char surface_height[DATA_STRUCT_SIZE];
+        uint8_t newdata;
+    }GUI_SURFACE_T;
+    
+    typedef struct{
+        char flow_rate[DATA_STRUCT_SIZE];
         uint8_t newdata;
         // daily use, other things?
     }GUI_FLOW_T;
     
     typedef struct{
-        char current_flow[4];
-        char todays_flow[4];
-        char week_flow[4];
-        char month_fow[4];
-        char year_flow[4];
+        char todays_flow[DATA_STRUCT_SIZE];
+        char week_flow[DATA_STRUCT_SIZE];
+        char month_flow[DATA_STRUCT_SIZE];
+        char year_flow[DATA_STRUCT_SIZE];
         uint8_t newdata;
     }GUI_STATS_T;
     
+    typedef struct{
+        uint8_t newdata;
+        char presence[DATA_STRUCT_SIZE];
+    }GUI_CP_T;
+    
+    
+    typedef struct{
+    float daily_total;
+    float weekly_total;
+    float monthly_total;
+    float yearly_total;
+    
+} Summary_Data_T;
     
     //https://stackoverflow.com/questions/14279242/read-bitmap-file-into-structure
 
@@ -106,8 +127,9 @@ typedef struct {             // Total: 54 bytes
     void draw_levels(GUI_LEVELS_T * data);
     void draw_flow(GUI_FLOW_T * data);
     void draw_stats(GUI_STATS_T * data);
-    void draw_settings(uint8_t curs, uint8_t item_sel);
+    void draw_settings(uint8_t curs, uint8_t * item_sel, int val, uint8_t  * old_cursor);
     void struct_fix(BMPHeaderTMP * bmpFHT, BMPHeader * bmpFH);
+    void draw_settings_init(void);
 
 
 

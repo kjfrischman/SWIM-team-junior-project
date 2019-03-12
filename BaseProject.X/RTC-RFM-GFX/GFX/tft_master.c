@@ -310,8 +310,10 @@ void tft_drawPixel(short x, short y, unsigned short color) {
   _cs_low();
 
   tft_spiwrite16(color);
-
+  
   _cs_high();
+  
+  
 }
 
 
@@ -343,6 +345,26 @@ void tft_drawFastVLine(short x, short y, short h, unsigned short color) {
   }
 
   _cs_high();
+}
+
+void tft_drawFastHLineArray(short x, short y, short w, uint16_t * color)
+{
+    // Rudimentary clipping
+  if((x >= _width) || (y >= _height)) return;
+  if((x+w-1) >= _width)  w = _width-x;
+  tft_setAddrWindow(x, y, x+w-1, y);
+
+  _dc_high();
+  _cs_low();
+
+  while (w--) {
+      tft_spiwrite16(color[w]);
+      delay_ms(5);
+  }
+  
+  _cs_high();
+  
+  
 }
 
 

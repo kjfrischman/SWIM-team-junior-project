@@ -14,7 +14,7 @@
 #define NETWORKID           100  //Do Not Change
 #define CONTROL_PANEL_NODE  3    //unique ID of the gateway/receiver
 #define SENSOR_UNIT_NODE    2    //ID of the sending Unit
-#define NODEID              SENSOR_UNIT_NODE //change to "SENDER" if this is the sender node
+#define NODEID              CONTROL_PANEL_NODE  //change to "SENDER" if this is the sender node
 #define FREQUENCY           RF69_915MHZ
 #define ENCRYPTKEY          "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
 #define IS_RFM69HW_HCW      //Hardware Revision
@@ -29,16 +29,11 @@ extern "C"
     void RF_SEND(uint8_t node, char * message, uint8_t attempts);
 };
 
-//Sensor Enum
-enum sensor_list {Flow, Conductive, Tank, Height, Heart, Pump, Delay};
-
 void RF_Init();
 bool RX_Handler(void);
 uint8_t DataParse (void);
 
 uint8_t * RX_Get_Raw(void);
-
-void RF_Data_Init(void);
 
 #endif	/* RF_MASTER_H */
 
