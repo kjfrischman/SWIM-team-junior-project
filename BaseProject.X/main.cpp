@@ -54,6 +54,8 @@
 
 #include "RTC-RFM-GFX/HallEffect/PUMP.h"
 
+#include "BUZZER/BUZZER.h"
+
 int main(void)
 {
     ///////////////////////////
